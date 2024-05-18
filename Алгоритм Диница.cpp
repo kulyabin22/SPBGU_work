@@ -7,16 +7,16 @@ using namespace std;
 
 class Dinic {
 private:
-    struct Edge {  // структура представления ребра
+    struct Edge {  // СЃС‚СЂСѓРєС‚СѓСЂР° РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏ СЂРµР±СЂР°
         int to, capacity, flow;
         Edge(int to, int capacity) : to(to), capacity(capacity), flow(0) {}
     };
 
-    int n, s, t; // число вершин, начало, конец
-    vector<vector<int>> cap; // список смежности
-    vector<Edge> edges; // список ребер
-    vector<int> level; // уровни вершин
-    vector<int> ptr; // указатель на текущее ребро
+    int n, s, t; // С‡РёСЃР»Рѕ РІРµСЂС€РёРЅ, РЅР°С‡Р°Р»Рѕ, РєРѕРЅРµС†
+    vector<vector<int>> cap; // СЃРїРёСЃРѕРє СЃРјРµР¶РЅРѕСЃС‚Рё
+    vector<Edge> edges;// СЃРїРёСЃРѕРє СЂРµР±РµСЂ
+    vector<int> level; //СѓСЂРѕРІРЅРё РІРµСЂС€РёРЅ
+    vector<int> ptr; // СѓРєР°Р·Р°С‚РµР»СЊ РЅР° С‚РµРєСѓС‰РµРµ СЂРµР±СЂРѕ
 
     bool bfs() {
         level.assign(n, -1);
@@ -28,7 +28,7 @@ private:
             q.pop();
             for (int i : cap[u]) {
                 Edge& e = edges[i];
-                if (level[e.to] == -1 && e.flow < e.capacity) { // Если конец ребра не посещен и по ребру можно пропустить поток, то добавляем уровень к вершине
+                if (level[e.to] == -1 && e.flow < e.capacity) { // Р•СЃР»Рё РєРѕРЅРµС† СЂРµР±СЂР° РЅРµ РїРѕСЃРµС‰РµРЅ Рё РїРѕ СЂРµР±СЂСѓ РјРѕР¶РЅРѕ РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРѕС‚РѕРє, С‚Рѕ РґРѕР±Р°РІР»СЏРµРј СѓСЂРѕРІРµРЅСЊ Рє РІРµСЂС€РёРЅРµ
                     level[e.to] = level[u] + 1;
                     q.push(e.to);
                 }
@@ -41,12 +41,11 @@ private:
         if (u == t) return flow;
         for (; ptr[u] < cap[u].size(); ptr[u]++) {
             int id = cap[u][ptr[u]];
-            Edge& e = edges[id];
-            if (level[e.to] == level[u] + 1 && e.flow < e.capacity) {  // Если конец ребра на единицу больше, чем уровень вершины u и по ребру можно пропустить поток
-                int pushed = dfs(e.to, min(flow, e.capacity - e.flow)); // то ищем максимальный поток по увеличивающему пути из конца ребра
-                if (pushed > 0) {
+            Edge e = edges[id];
+            if (level[e.to] == level[u] + 1 && e.flow < e.capacity) {  // Р•СЃР»Рё РєРѕРЅРµС† СЂРµР±СЂР° РЅР° РµРґРёРЅРёС†Сѓ Р±РѕР»СЊС€Рµ, С‡РµРј СѓСЂРѕРІРµРЅСЊ РІРµСЂС€РёРЅС‹ u Рё РїРѕ СЂРµР±СЂСѓ РјРѕР¶РЅРѕ РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРѕС‚РѕРє
+                int pushed = dfs(e.to, min(flow, e.capacity - e.flow)); // С‚Рѕ РёС‰РµРј РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ РїРѕС‚РѕРє РїРѕ СѓРІРµР»РёС‡РёРІР°СЋС‰РµРјСѓ РїСѓС‚Рё РёР· РєРѕРЅС†Р° СЂРµР±СЂР°
                     e.flow += pushed;
-                    edges[id ^ 1].flow -= pushed;
+                    edges[id].flow -= pushed;
                     return pushed;
                 }
             }
@@ -57,20 +56,20 @@ private:
 public:
     Dinic(int n, int s, int t) : n(n), s(s), t(t), cap(n), level(n), ptr(n) {}
 
-    void addEdge(int from, int to, int capacity) { // добавление ребра
+    void addEdge(int from, int to, int capacity) { // РґРѕР±Р°РІР»РµРЅРёРµ СЂРµР±СЂР°
         edges.emplace_back(to, capacity);
         cap[from].push_back(edges.size() - 1);
         edges.emplace_back(from, 0);
         cap[to].push_back(edges.size() - 1);
     }
 
-    int maxFlow() { // поиск максимального потока
-        int flow = 0;
-        while (bfs()) {  // Пока есть увеличивающие пути
+    int maxFlow() { // РїРѕРёСЃРє РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ РїРѕС‚РѕРєР°
+        while (bfs()) {  // РџРѕРєР° РµСЃС‚СЊ СѓРІРµР»РёС‡РёРІР°СЋС‰РёРµ РїСѓС‚Рё
             ptr.assign(n, 0);
             int pushed;
-            while ((pushed = dfs(s, INT_MAX)) > 0) {  // Пока есть увеличивающий путь из источника
-                flow += pushed; // Увеличиваем текущий поток
+            while ((pushed = dfs(s, INT_MAX)) > 0) {  // РџРѕРєР° РµСЃС‚СЊ СѓРІРµР»РёС‡РёРІР°СЋС‰РёР№ РїСѓС‚СЊ РёР· РёСЃС‚РѕС‡РЅРёРєР°
+                flow += pushed; // РЈРІРµР»РёС‡РёРІР°РµРј С‚РµРєСѓС‰РёР№ РїРѕС‚РѕРє
+            }
             }
         }
         return flow;
@@ -80,7 +79,7 @@ public:
 int main() {
     int s, t;
     int n = 6;
-    cin >> s >> t; // ввод начала и конца
+    cin >> s >> t; // РІРІРѕРґ РЅР°С‡Р°Р»Р° Рё РєРѕРЅС†Р°
     vector<vector<int>> graph = { { 0, 18, 12, 0, 0, 0 }, { 0, 0, 0, 0, 16, 0 },
             { 0, 0, 0, 6, 5, 0 },  { 0, 0, 0, 0, 11, 3 },
             { 0, 0, 0, 0, 0, 10 },   { 0, 0, 0, 0, 0, 0 } };
