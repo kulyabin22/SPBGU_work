@@ -5,20 +5,20 @@
 #include <unordered_map>
 using namespace std;
 
-class HuffmanTree {
+class HuffmanCode {
 	string text;
 	struct Node {
-		char ch;
-		int freq;
-		Node* left, * right;
+		char ch; // символ
+		int freq;  // частота появления
+		Node* left, * right; // левый и правый узлы
 	};
 
 public:
-	HuffmanTree(string ntext) {
+	HuffmanCode(string ntext) {
 		text = ntext;
 	}
 
-	Node* getNode(char ch, int freq, Node* left, Node* right) {
+	Node* getNode(char ch, int freq, Node* left, Node* right) { // получаем новый узел
 		Node* node = new Node();
 		node->ch = ch;
 		node->freq = freq;
@@ -28,24 +28,18 @@ public:
 		return node;
 	}
 
-	struct comp {
-		bool operator()(Node* l, Node* r) {
-			return l->freq > r->freq;
-		}
-	};
-
-	void encode(Node* root, string str, unordered_map<char, string>& huffmancode) {
+	void encoding(Node* root, string str, unordered_map<char, string> huffmancode) { // кодируем символы строки
 		if (root == nullptr) {
 			return;
 		}
 		if (!root->left && !root->right) {
 			huffmancode[root->ch] = str;
 		}
-		encode(root->left, str + '0', huffmancode);
-		encode(root->right, str + '1', huffmancode);
+		encoding(root->left, str + '0', huffmancode);
+		encoding(root->right, str + '1', huffmancode);
 	}
 
-	void decode(Node* root, int& id, string str) {
+	void decoding(Node* root, int& id, string str) {  // раскодировка символа
 		if (root == nullptr) {
 			return;
 		}
@@ -58,64 +52,68 @@ public:
 		id++;
 
 		if (str[id] == '0') {
-			decode(root->left, id, str);
+			decoding(root->left, id, str);
 		}
 		else {
-			decode(root->right, id, str);
+			decoding(root->right, id, str);
 		}
 	}
 
-	void buildHuffmanTree() {
+        bool comp(Node* l, Node* r) { // компаратор для сортировки по возрастанию
+		return l->freq > r->freq;
+	}
+
+	void HuffmanTree() {
 		unordered_map<char, int> freq;
-		for (char ch : text) {
+		for (char ch : text) { // подсчитываем частоту появления каждого символа
 			freq[ch]++;
 		}
 
-		priority_queue<Node*, vector<Node*>, comp> pq;
+		priority_queue<Node*, vector<Node*>, comp> pq; // создаем приоритетную очередь для храния узлов
 
 		for (auto& pair : freq) {
-			pq.push(getNode(pair.first, pair.second, nullptr, nullptr));
+			pq.push(getNode(pair.first, pair.second, nullptr, nullptr)); // создаем узлы для каждого символа и добваляем в очередь
 		}
 
-		while (pq.size() != 1) {
+		while (pq.size() != 1) {                 // извлекаем узлы из очереди
 			Node* left = pq.top(); pq.pop();
 			Node* right = pq.top();	pq.pop();
 
 			int sum = left->freq + right->freq;
-			pq.push(getNode('\0', sum, left, right));
+			pq.push(getNode('\0', sum, left, right)); // создаем узел предок с частотой равной сумме частот потомков
 		}
 
-		Node* root = pq.top();
-		unordered_map<char, string> huffmanCode;
-		encode(root, "", huffmanCode);
+		Node* root = pq.top();                   // извлекаем корневой узел
+		unordered_map<char, string> huffmanCode;  // контейнер для хранения кода каждого символа
+		encoding(root, "", huffmanCode);          // кодируем символы
 
-		cout << "Huffman Codes are :\n" << '\n';
+		cout << "Huffman Codes are : " << endl;  // выводим коды символов
 		for (auto& pair : huffmanCode) {
-			cout << pair.first << " " << freq[pair.first] << " " << pair.second << '\n';
+			cout << pair.first << " " << freq[pair.first] << " " << pair.second << endl;
 		}
 
-		cout << "\nOriginal string was :\n" << text << '\n';
-
+		cout << "Original string was : " << text << endl;  
+		// выводим изначальную строку
 		string str = "";
 		for (char ch : text) {
 			str += huffmanCode[ch];
 		}
 
-		cout << "\nEncoded string is :\n" << str << '\n';
-
+		cout << "Encoded string is : " << str << endl;  
+		// выводим раскодированную строку
 		int id = -1;
-		cout << "\nDecoded string is: \n";
+		cout << "Decoded string is: " << endl;
 		while (id < (int)str.size() - 2) {
-			decode(root, id, str);
+			decoding(root, id, str);
 		}
 	}
 };
 
 int main()
 {
-	HuffmanTree text("The best in St. Petersburg State University  - faculty of PM-PU.");
+	HuffmanCode text("The best in St. Petersburg State University - faculty of PM-PU.");
 
-	text.buildHuffmanTree();
+	text.HuffmanTree();
 
 	return 0;
 }
